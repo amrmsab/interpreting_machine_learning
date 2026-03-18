@@ -2,14 +2,14 @@ site_name: Interpreting Machine Learning
 nav:
   - Home: index.md
   - Chapter 1 - Introduction: chapter1/chapter1.md
-  - Chapter 2 - Regulations: chapter2.md
-  - Chapter 3 - Feature-based Explanations: chapter3.md
-  - Chapter 4 - Contrastive and Counterfactual Explanations: chapter4.md
-  - Chapter 5 - Example and Case-based Explanations: chapter5.md
-  - Chapter 6 - Deep Learning Interpretability: chapter6.md
-  - Chapter 7 - Mechanistic Interpretability in Transformers: chapter7.md
-  - Chapter 8 - Explainability with Federated Learning: chapter8.md
-  - Chapter 9 - Applications in Healthcare: chapter9.md
-  - Chapter 10 - Gaps and Future Directions: chapter10.md
+  # - Chapter 2 - Regulations: chapter2.md
+  # - Chapter 3 - Feature-based Explanations: chapter3.md
+  # - Chapter 4 - Contrastive and Counterfactual Explanations: chapter4.md
+  # - Chapter 5 - Example and Case-based Explanations: chapter5.md
+  # - Chapter 6 - Deep Learning Interpretability: chapter6.md
+  # - Chapter 7 - Mechanistic Interpretability in Transformers: chapter7.md
+  # - Chapter 8 - Explainability with Federated Learning: chapter8.md
+  # - Chapter 9 - Applications in Healthcare: chapter9.md
+  # - Chapter 10 - Gaps and Future Directions: chapter10.md
 theme:
   name: material
