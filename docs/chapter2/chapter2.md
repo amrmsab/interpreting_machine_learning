@@ -1,5 +1,7 @@
 # Chapter 2: Governing the Black Box – Stakeholders, Regulation, and Explainable AI
 
+**Omar Emad**
+
 ## 1. Introduction: Is the Algorithm's Word Enough?
 
 Building on the technical foundations of machine learning discussed in Chapter 1, we must now confront the socio-technical reality of deploying these models in the real world.
@@ -184,7 +186,7 @@ In Chapter 3, we will explore how these regulated systems are deployed into spec
 
 ## 10. AI Transparency Statement
 
-In accordance with the CSEN 1153 syllabus guidelines, I acknowledge that an AI language model was used during the preparation of this chapter. Specifically, the LLM was utilized for draft refinement, structural organization, and pedagogical scaffolding (generating the Python code snippet and discussion prompts). All AI-generated outputs were critically evaluated, independently verified against the cited academic and legal sources, and synthesized to reflect my own original analysis of the topic.
+In accordance with the **CSEN1152** (*Seminar of XAI: Concepts, Applications and Future Directions*) syllabus guidelines at the **German University in Cairo (GUC)** (Spring 2026), I acknowledge that an AI language model was used during the preparation of this chapter. Specifically, the LLM was utilized for draft refinement, structural organization, and pedagogical scaffolding (generating the Python code snippet and discussion prompts). All AI-generated outputs were critically evaluated, independently verified against the cited academic and legal sources, and synthesized to reflect my own original analysis of the topic.
 
 ---
 
@@ -205,3 +207,15 @@ Stanford University. (2025). _Artificial Intelligence Index Report 2025_.
 Winfield, A. F. T., et al. (2021). IEEE P7001: A Proposed Standard on Transparency. _Frontiers in Robotics and AI_.
 
 ---
+
+To cite this chapter, please use the following BibTeX:
+
+```bibtex
+@misc{emad_2026_XAI,
+  author       = {Omar Emad},
+  title        = {Interpreting Machine Learning: A Gentle Introduction, Chapter 2},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/amrmsab/interpreting_machine_learning}},
+}
+```
