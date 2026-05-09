@@ -524,7 +524,7 @@ Zeiler, M. D., & Fergus, R. (2014). Visualizing and understanding convolutional 
 ```bibtex
 @misc{hegazy_2026_XAI,
   author       = {Amr Hegazy},
-  title        = {Interpreting Machine Learning: A Gentle Introduction, Chapter 9},
+  title        = {Interpreting Machine Learning: A Gentle Introduction, Chapter 6},
   year         = {2026},
   publisher    = {GitHub},
   howpublished = {\url{https://github.com/amrmsab/interpreting_machine_learning}},
