@@ -1,6 +1,6 @@
 # Chapter 3 — Feature-based Explanations
 
-**Author: [Youssef Hemaya](https://www.linkedin.com/in/youssef-hemaya/)**  
+**Author: [Youssef Hemaya](https://www.linkedin.com/in/youssef-hemaya-980407345/)**  
 *CSEN 1153 — Seminar on Explaining AI | German University in Cairo | Spring 2026*
 
 ---
