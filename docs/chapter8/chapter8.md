@@ -710,7 +710,7 @@ clients that is more combinations than there are atoms in the observable
 universe. In practice, researchers use Monte Carlo approximations —
 randomly sampling many orderings and averaging the marginal contributions
 observed — which gives a reliable estimate at a fraction of the cost.
----
+
 
 These four approaches represent the current toolkit for explaining
 federated models. But there is a fifth direction that emerged from the
