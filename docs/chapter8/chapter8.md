@@ -27,8 +27,7 @@ So Google had a genuine problem: the model needed data it was never going
 to get!
 
 ![Private data trapped on devices](figs/fig1_private-data.png)
-*Figure 1. The data that would make models most powerful is also the data
-that cannot move.*
+*Figure 1. The data that would make models most powerful is also the data that cannot move.*
 
 This is not just a Google problem. It shows up everywhere.
 
