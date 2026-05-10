@@ -382,7 +382,7 @@ the gradients are identical.
 So the attacker runs an optimization: adjust $x'$ and $y'$ step by step until
 the dummy gradient matches the real one as closely as possible (minimize the distance)
 
-$$x'^{*}, \, y'^{*} = \arg\min_{x', y'} \left\| \frac{\partial \, \ell(F(x', W), y')}{\partial W} - \nabla W \right\|^2$$
+$$x^{*}, \, y^{*} = \arg\min_{x', y'} \left\| \frac{\partial \, \ell(F(x', W), y')}{\partial W} - \nabla W \right\|^2$$
 
 Simply means: find the values of $x'$ and $y'$
 that make the expression inside as small as possible. In practice this is
