@@ -40,12 +40,11 @@ The book covers a wide range of topics in XAI, from foundational concepts to adv
 - **Chapter 9 – Applications in Healthcare**  
   Highlights real-world case studies of XAI in medical diagnosis and decision support.  ... [placeholder]
 
-- **Chapter 10 – Gaps and Future Directions**  
-  Identifies open challenges, research gaps, and future opportunities in XAI.... [placeholder]
+- **Chapter 10 – [Research Gaps and Future Directions in Explainable AI](future_directions_xai/chapter.md)**  
+  Critically examines unresolved challenges in explainable AI, including evaluation, human-centered explainability, misleading explanations, black-box model concerns, and future directions for modern AI systems.
+  
+- 📑 Citation
 
----
-
-## 📑 Citation
 To cite sections from this book, please use the following BibTeX entry, **citing the exact student author of the chapter**:
 
 ```bibtex
