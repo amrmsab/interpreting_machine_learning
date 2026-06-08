@@ -1,0 +1,17 @@
+.idea/
+Resources/
+Syllabus.md
+
+# MkDocs build output
+site/
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Environment files
+.env
+.env.*
