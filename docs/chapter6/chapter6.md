@@ -85,7 +85,7 @@ Running this on a ResNet-18 classifying a Samoyed photograph produces:
 
 ![Vanilla saliency applied to a Samoyed image](figs/nb_vanilla_saliency.png)
 
-*__Figure 4.__ Vanilla saliency on a Samoyed photograph (ResNet-18, predicted class: "Samoyed"). The map loosely localizes to the dog, but scattered bright pixels appear across the background. This noisiness has a precise cause: deep ReLU networks have jagged gradient landscapes that flip sign near activation boundaries. One backward pass reads one unstable point in that landscape.*
+*__Figure 4.__ Vanilla saliency on a Samoyed photograph (ResNet-18, predicted class: "Samoyed"). The map loosely localizes to the dog, but scattered bright pixels appear across the background. This noisiness has a precise cause: deep ReLU networks have jagged gradient landscapes that flip sign near activation boundaries. One backward pass reads one unstable point in that landscape. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
 The noisiness is not a bug in the implementation. It's an honest readout of a genuinely unstable gradient field. Neural networks are not trained to have smooth gradients because they are trained to classify images correctly, and these are not the same objective.
 
@@ -110,7 +110,7 @@ def smoothgrad(model, input_tensor, class_idx, n_samples=25, sigma=0.15):
 
 ![SmoothGrad vs vanilla saliency](figs/nb_smoothgrad.png)
 
-*__Figure 5.__ Left: vanilla saliency is scattered. Centre: SmoothGrad ($n=25$) where the dog's body dominates, background noise largely suppressed. Right: SmoothGrad overlaid on the original. Averaging across 25 perturbed copies removes the high-frequency gradient noise without changing the network architecture.*
+*__Figure 5.__ Left: vanilla saliency is scattered. Centre: SmoothGrad ($n=25$) where the dog's body dominates, background noise largely suppressed. Right: SmoothGrad overlaid on the original. Averaging across 25 perturbed copies removes the high-frequency gradient noise without changing the network architecture. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
 ### Deconvnet
 
@@ -182,11 +182,11 @@ A subtlety worth knowing: input pixels, after ImageNet normalization, are not no
 
 ![LRP relevance map vs vanilla saliency](figs/nb_lrp_vs_saliency.png)
 
-*__Figure 9.__ Left: input image (Samoyed). Centre: vanilla saliency, unsigned, distributed, no consistent interpretation of sign. Right: LRP map, signed. Red regions support the "Samoyed" prediction; blue regions suppress it. The map concentrates positive relevance on the dog's head and body while flagging background patches as actively working against the classification.*
+*__Figure 9.__ Left: input image (Samoyed). Centre: vanilla saliency, unsigned, distributed, no consistent interpretation of sign. Right: LRP map, signed. Red regions support the "Samoyed" prediction; blue regions suppress it. The map concentrates positive relevance on the dog's head and body while flagging background patches as actively working against the classification. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
 ![LRP relevance overlay](figs/nb_lrp_result.png)
 
-*__Figure 10.__ LRP relevance overlaid on the input. Positive relevance (red) concentrates on the dog's face and upper body; patches of background grass generate negative relevance (blue). A clinician seeing this on a chest X-ray would know not only which regions the model examined, but which ones supported versus contradicted the diagnosis.*
+*__Figure 10.__ LRP relevance overlaid on the input. Positive relevance (red) concentrates on the dog's face and upper body; patches of background grass generate negative relevance (blue). A clinician seeing this on a chest X-ray would know not only which regions the model examined, but which ones supported versus contradicted the diagnosis. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
 The practical significance of sign is hard to overstate. Saliency maps show you where the model is sensitive. LRP shows you which pixels are working *for* the prediction and which are working *against* it. This is completely invisible to any gradient-based saliency method.
 
@@ -336,7 +336,7 @@ And here they are applied to the same input:
 
 ![All four methods on the same input](figs/fig8_comparison.png)
 
-*__Figure 19.__ All four methods applied to the same Samoyed image (predicted: "Samoyed," confidence 0.87). From left: input image; vanilla saliency (unsigned, noisy); LRP relevance (red = supports, blue = opposes); activation maximization output for the "Samoyed" neuron (abstract texture); ViT attention rollout (smooth, concentrated on the subject). Each method reveals something the others do not.*
+*__Figure 19.__ All four methods applied to the same Samoyed image (predicted: "Samoyed," confidence 0.87). From left: input image; vanilla saliency (unsigned, noisy); LRP relevance (red = supports, blue = opposes); activation maximization output for the "Samoyed" neuron (abstract texture); ViT attention rollout (smooth, concentrated on the subject). Each method reveals something the others do not. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
 ### When to use what
 
