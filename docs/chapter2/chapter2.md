@@ -1,12 +1,12 @@
 # Chapter 2: Governing the Black Box: Stakeholders, Regulation, and Explainable AI
 
-**Omar Emad**
+**Author:** [Omar Emad](https://www.linkedin.com/in/omar-emad-331773263/)
 
 ## 1. Introduction: Is the Algorithm's Word Enough?
 
 Building on the technical foundations of machine learning discussed in Chapter 1, we must now confront the socio-technical reality of deploying these models in the real world.
 
-Imagine this scenario: You apply for a vital bank loan to buy a house, but your application is rejected. When you ask the bank why, the representative simply says: _"The algorithm categorized you as high risk. The machine decided."_
+Recalling the bank loan scenario introduced in Chapter 1: you apply for a loan, the system rejects you within seconds, and no reason is given. When you ask the bank why, the representative might add only: _"The algorithm categorized you as high risk. The machine decided."_
 
 Is that acceptable? Who deserves an explanation in that room, and what kind of explanation do they deserve? More importantly, is the bank legally required to provide one?
 
@@ -100,9 +100,9 @@ The significance of the AI Act is that explainability is no longer only a resear
 
 ### 4.3 Global Trends: Is Governance Working?
 
-The **Artificial Intelligence Index Report 2025** reported a significant short-term improvement in foundation-model transparency: the Foundation Model Transparency Index average score increased from **37/100 in 2023** to **58/100 in 2024**, partly because developers disclosed previously nonpublic information about labor, data, and compute ([Stanford Institute for Human-Centered Artificial Intelligence, 2025](#ref-stanford)).
+The **Artificial Intelligence Index Report 2025** reported a significant short-term improvement in foundation-model transparency: the **Foundation Model Transparency Index (FMTI)** average score increased from **37/100 in 2023** to **58/100 in 2024**, partly because developers disclosed previously nonpublic information about labor, data, and compute ([Stanford Institute for Human-Centered Artificial Intelligence, 2025](#ref-stanford)).
 
-However, this should not be framed as a stable long-term trend. Later FMTI work reported a lower average score of **40.69/100 in 2025**, indicating that transparency progress remains uneven and fragile ([Wan et al., 2025](#ref-wan)). A careful conclusion is therefore that AI governance is improving in some areas, but transparency remains inconsistent across companies, business models, and disclosure categories.
+However, this should not be framed as a stable long-term trend. Later FMTI updates reported a lower average score of **40.69/100 in 2025**, indicating that transparency progress remains uneven and fragile ([Wan et al., 2025](#ref-wan)). A careful conclusion is therefore that AI governance is improving in some areas, but transparency remains inconsistent across companies, business models, and disclosure categories.
 
 ---
 
@@ -138,13 +138,15 @@ In relation to the GDPR and EU AI Act, SCOR can be understood as a practical gov
 
 How can engineers deliver explanations to non-technical users in a way that satisfies explanatory pragmatism and supports legal governance?
 
+Returning to the loan scenario from Chapter 1, the applicant still deserves more than a silent rejection or a vague reference to "the algorithm." This section shows what a safer explanation pipeline could look like when that applicant asks for understandable reasons and a path to human review.
+
 Recent work in the _Cambridge Journal of Artificial Intelligence_ argues for **Natural Language Explanations (NLEs)** delivered through dialogue systems as a way to address the "last mile" of explainability ([Nicolis & Kingsman, 2024](#ref-nicolis)). Rather than presenting a rejected applicant with a raw [SHAP](https://github.com/shap/shap) plot, engineers can convert feature-contribution evidence into a short, plain-language explanation.
 
 However, a critical design rule must be followed: the language model must not become the source of truth. The model explanation should come from the verified decision evidence, such as feature values, SHAP contributions, policy rules, and audit logs. The language model should only rewrite the verified facts into clearer language, and its output should be validated or replaced by a deterministic template if it is incomplete or misleading.
 
 ### Code Snippet: Generating Governance-Aware NLEs in Python
 
-The following example demonstrates a safer pattern. It uses a synthetic credit-like dataset for teaching purposes, trains an XGBoost classifier, computes SHAP contributions, builds a controlled explanation from verified facts, and then optionally asks an instruction-tuned model to rewrite the explanation. If the language-model output fails basic validation, the system falls back to a deterministic template.
+The following example extends the Chapter 1 loan scenario with a safer implementation pattern. It uses a synthetic credit-like dataset for teaching purposes, trains an XGBoost classifier, computes SHAP contributions, builds a controlled explanation from verified facts, and then optionally asks an instruction-tuned model to rewrite the explanation. If the language-model output fails basic validation, the system falls back to a deterministic template.
 
 This is an educational prototype, not a legally compliant lending system. A real financial system would require validated data, lawful feature selection, domain-specific compliance review, model-risk management, audit logging, human oversight, and an appeal process.
 
@@ -162,12 +164,18 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 warnings.filterwarnings("ignore")
 
 # =========================================================
-# 1. Create a synthetic credit-like dataset for demonstration
+# Step 1: Build a synthetic credit-like dataset
 # =========================================================
+# We use synthetic data because real lending data is private, regulated,
+# and cannot be published in a teaching chapter. The goal is not to train
+# a production credit model. It is to demonstrate how verified model
+# evidence can be turned into a governance-aware user explanation.
 
-rng = np.random.default_rng(42)
-n = 1500
+rng = np.random.default_rng(42)  # fixed seed for reproducible demo output
+n = 1500  # enough rows for a small but stable tree-based classifier
 
+# Each feature is sampled from a simple distribution that resembles
+# plausible applicant profiles without using any real customer records.
 X = pd.DataFrame({
     "annual_income": rng.normal(55000, 18000, n).clip(15000, 150000),
     "debt_to_income_ratio": rng.uniform(0.05, 0.75, n),
@@ -177,19 +185,25 @@ X = pd.DataFrame({
     "loan_amount": rng.normal(30000, 12000, n).clip(5000, 100000),
 })
 
-# Synthetic approval rule with noise. Class 1 means approved.
+# Step 1b: Define a transparent ground-truth approval rule.
+# This hidden rule gives the dataset a known structure so the later
+# explanation step has interpretable drivers. Class 1 means approved.
 approval_score = (
-    0.000035 * X["annual_income"]
-    - 3.4 * X["debt_to_income_ratio"]
-    + 0.10 * X["credit_history_years"]
-    - 0.55 * X["missed_payments_12m"]
-    + 0.00008 * X["savings_balance"]
-    - 0.000018 * X["loan_amount"]
-    + rng.normal(0, 0.35, n)
+    0.000035 * X["annual_income"]          # higher income helps approval
+    - 3.4 * X["debt_to_income_ratio"]      # higher debt burden hurts approval
+    + 0.10 * X["credit_history_years"]     # longer history helps approval
+    - 0.55 * X["missed_payments_12m"]      # recent missed payments hurt approval
+    + 0.00008 * X["savings_balance"]       # savings provide a safety buffer
+    - 0.000018 * X["loan_amount"]          # larger requested loans are riskier
+    + rng.normal(0, 0.35, n)               # small noise to avoid a perfect rule
 )
 
-y = (approval_score > 0.8).astype(int)
+y = (approval_score > 0.8).astype(int)  # threshold turns the score into labels
 
+# Step 1c: Train a separate ML model on the synthetic labels.
+# In production, the model would be audited against policy and law.
+# Here, XGBoost stands in for the opaque decision system that must later
+# be explained to the applicant from Chapter 1's loan scenario.
 xgb_model = xgboost.XGBClassifier(
     random_state=42,
     n_estimators=120,
@@ -200,8 +214,9 @@ xgb_model = xgboost.XGBClassifier(
 
 xgb_model.fit(X, y)
 
-# A hypothetical applicant. These values are intentionally chosen
-# to produce a likely rejection in this educational example.
+# Step 1d: Create one hypothetical rejected applicant.
+# These values are intentionally weak on credit-history, payment history,
+# savings, and debt burden so the demo produces a denial case.
 applicant = pd.DataFrame([{
     "annual_income": 38000,
     "debt_to_income_ratio": 0.56,
@@ -215,8 +230,10 @@ approval_probability = xgb_model.predict_proba(applicant)[0][1]
 decision = "approved" if approval_probability >= 0.5 else "denied"
 
 # =========================================================
-# 2. Generate SHAP contributions
+# Step 2: Compute SHAP contributions for the applicant
 # =========================================================
+# SHAP gives per-feature evidence for this one decision. That evidence
+# becomes the verified source of truth for the explanation pipeline.
 
 explainer = shap.Explainer(xgb_model, X)
 shap_values = explainer(applicant)
@@ -230,13 +247,14 @@ for feature, contribution in zip(applicant.columns, shap_values.values[0]):
         "contribution": float(contribution)
     })
 
-# Since class 1 means approval, negative SHAP values lowered approval.
+# Because class 1 means approval, negative SHAP values pushed the score down.
 negative_reasons = sorted(feature_impacts, key=lambda item: item["contribution"])
-top_reasons = negative_reasons[:3]
+top_reasons = negative_reasons[:3]  # keep only the three strongest rejection drivers
 
 # =========================================================
-# 3. Convert SHAP facts into controlled natural-language facts
+# Step 3: Convert verified SHAP facts into controlled language
 # =========================================================
+# The explanation must come from audited facts, not from free-form model text.
 
 def readable_reason(reason):
     feature = reason["feature"]
@@ -259,6 +277,8 @@ def readable_reason(reason):
 
 reason_texts = [readable_reason(reason) for reason in top_reasons]
 
+# Bundle the decision, probability, top reasons, and legal-style rights text
+# into one controlled fact sheet that downstream components may not alter.
 controlled_facts = (
     f"Decision: {decision}.\n"
     f"Estimated approval probability: {approval_probability:.1%}.\n"
@@ -266,6 +286,7 @@ controlled_facts = (
     "Required user rights message: The applicant may request human review or provide corrected information."
 )
 
+# Deterministic fallback message if the optional LLM rewrite fails validation.
 def deterministic_user_message(decision, probability, reasons):
     if decision == "approved":
         return (
@@ -284,8 +305,10 @@ def deterministic_user_message(decision, probability, reasons):
 fallback_message = deterministic_user_message(decision, approval_probability, reason_texts)
 
 # =========================================================
-# 4. Optional LLM rewriting, with validation and fallback
+# Step 4: Optionally rewrite the verified facts with an LLM
 # =========================================================
+# The LLM is only a language layer. It may polish wording, but it must not
+# invent new reasons or remove the applicant's right to human review.
 
 model_name = "google/flan-t5-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -321,6 +344,8 @@ with torch.no_grad():
 
 candidate_message = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
 
+# Reject LLM output that is too short, omits required rights language,
+# drops the verified reasons, or contradicts the original decision.
 def is_usable_message(message):
     message_lower = message.lower()
 
@@ -335,6 +360,7 @@ def is_usable_message(message):
 
     return True
 
+# Use the validated LLM rewrite when possible; otherwise keep the safe template.
 final_message = candidate_message if is_usable_message(candidate_message) else fallback_message
 
 print("Controlled facts:\n", controlled_facts)
@@ -389,7 +415,7 @@ Explanatory pragmatism shows that an explanation must be useful to a specific au
 
 Explainable AI is therefore not merely a technical feature that opens black boxes for engineers. It is a governance mechanism that can support accountability, contestability, and fairer distribution of power. When implemented responsibly, XAI can help bridge the gap between complex mathematical systems and human decision-making, but only if explanations are grounded in verified evidence, connected to human oversight, and paired with meaningful redress.
 
-In Chapter 3, we will examine how these regulated systems are deployed in specific industry verticals and how organizations can maintain continuous compliance in production.
+In Chapter 3, we move from governance frameworks to technical explanation methods, including feature-attribution techniques such as SHAP and LIME, which engineers can use to produce the verified evidence that regulatory systems require.
 
 ---
 
