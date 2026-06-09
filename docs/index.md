@@ -1,20 +1,22 @@
 # Interpreting Machine Learning: A Gentle Introduction
 
-Welcome to *Interpreting Machine Learning*, a collaborative book exploring the growing field of **eXplainable Artificial Intelligence (XAI)**.  
+Welcome to *Interpreting Machine Learning*, a collaborative book exploring the growing field of eXplainable Artificial Intelligence (XAI).  
 
-This book was developed by seminar students of the seminar course: *Seminar on XAI: Concepts, Applications and Future Directions)*, during the Spring of 2026 at the **German University in Cairo (GUC)**.  
+This book was developed by seminar students of the seminar course: *Seminar on XAI: Concepts, Applications and Future Directions)*, during the Spring of 2026 at the German University in Cairo (GUC).  
 
-Instructor: Amr S. Mohamed
-Email: amr(dot)saber(at)guc(dot)edu(dot)eg
+_Instructor_: Amr S. Mohamed
 
----
-
-## 📖 About the Book
-Artificial intelligence is increasingly shaping decisions across domains. Yet, as models grow in complexity, understanding *why* they make certain predictions becomes both a technical, regulatory, and ethical necessity. This book introduces readers to the principles, practices, and challenges in XAI.  
+_Email_: amr[dot]saber[at]guc[dot]edu[dot]eg
 
 ---
 
-## 📚 Table of Contents
+## About the Book
+
+Artificial intelligence (AI) is increasingly shaping decisions. Yet, as AI models grow in complexity, understanding *why* these models make certain predictions becomes both a technical, regulatory, and ethical necessity. This book introduces readers to the principles, practices, and challenges in XAI.  
+
+---
+
+## Table of Contents
 
 - **Chapter 1 – Introduction**  
   Provides an overview of XAI, including its motivations, definitions, and the importance of interpretability in modern machine learning. It sets the stage by explaining why transparency matters for trust, safety, and adoption of AI systems.
@@ -48,6 +50,10 @@ Artificial intelligence is increasingly shaping decisions across domains. Yet, a
 
 ---
 
-## 📑 Citation
-Each chapter was written by one or more students. 
+## Citation
+
 Each chapter has its own BibTeX entry. To cite chapters or sections from this book, please use the BibTeX entry at the end of each chapter.
+
+## Corrections
+
+For corrections or suggestions to the text, please email the course instructor at the email provided above.
