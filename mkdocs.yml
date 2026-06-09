@@ -7,7 +7,7 @@ nav:
   - Chapter 4 - Contrastive and Counterfactual Explanations: chapter4/chapter4.md
   - Chapter 5 - Example and Case-based Explanations: chapter5/chapter5.md
   - Chapter 6 - Deep Learning Interpretability: chapter6/chapter6.md
-  # - Chapter 7 - Mechanistic Interpretability in Transformers: chapter7/chapter7.md
+  - Chapter 7 - Mechanistic Interpretability in Transformers: chapter7/chapter7.md
   - Chapter 8 - Explainability with Federated Learning: chapter8/chapter8.md
   # - Chapter 9 - Applications in Healthcare: chapter9/chapter9.md
   # - Chapter 10 - Gaps and Future Directions: chapter10/chapter10.md
@@ -23,7 +23,7 @@ nav:
   - Chapter 4 - Contrastive and Counterfactual Explanations: chapter4/chapter4.md
   - Chapter 5 - Example and Case-based Explanations: chapter5/chapter5.md
   - Chapter 6 - Deep Learning Interpretability: chapter6/chapter6.md
-  # - Chapter 7 - Mechanistic Interpretability in Transformers: chapter7/chapter7.md
+  - Chapter 7 - Mechanistic Interpretability in Transformers: chapter7/chapter7.md
   - Chapter 8 - Explainability with Federated Learning: chapter8/chapter8.md
   # - Chapter 9 - Applications in Healthcare: chapter9/chapter9.md
   # - Chapter 10 - Gaps and Future Directions: chapter10/chapter10.md
