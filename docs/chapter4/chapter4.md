@@ -1,21 +1,19 @@
 # Chapter 4: Contrastive and Counterfactual Explanations
 
-**Author:** [Youssef Amr](https://www.linkedin.com/in/youssef-amr-2b019b274) (55-4624)
+**Author:** [Youssef Amr](https://www.linkedin.com/in/youssef-amr-2b019b274)
 ---
 
 ## 4.1 Introduction
 
-Imagine you applied for a bank loan and were rejected. The bank's decision was made by a machine learning model — a black box trained on thousands of historical records. You want to understand: *why was I rejected?* But more importantly, you want to know: *what would I need to change to get approved?*
+**Contrastive** and **counterfactual explanations** are two of the most intuitive and actionable techniques in interpretable machine learning. Rather than explaining the inner workings of a model in abstract terms, they explain decisions in terms of *contrast* — comparing what happened with what *could have* happened, or what *would* happen under a different set of inputs.
 
-This is precisely the question that **contrastive** and **counterfactual explanations** are designed to answer. Rather than explaining the inner workings of a model in abstract terms, they explain decisions in terms of *contrast* — comparing what happened with what *could have* happened.
-
-These explanations mirror how humans naturally reason. When we ask "why did you choose A over B?" we are asking for a *contrastive* explanation. When we imagine "if only I had done X differently, then Y would not have happened," we are engaging in *counterfactual* thinking. Machine learning interpretability has borrowed these concepts from cognitive science and philosophy to make AI decisions more understandable, actionable, and fair.
+These explanations mirror how humans naturally reason. When we ask *"why did you choose A over B?"* we are asking for a *contrastive* explanation. When we imagine *"if only I had done X differently, then Y would not have happened,"* we are engaging in *counterfactual* thinking. Machine learning interpretability has borrowed these concepts from cognitive science and philosophy to make AI decisions more understandable, actionable, and fair.
 
 This chapter covers:
 
 - The philosophical and cognitive foundations of contrastive and counterfactual reasoning
 - How counterfactual explanations are formally defined and generated
-- Key algorithms: DICE, Wachter et al., and others
+- Key algorithms: DiCE, Wachter et al., FACE, and others
 - Evaluation criteria for good counterfactuals
 - Legal and ethical implications (GDPR, algorithmic recourse)
 - Connections to other chapters in this book
@@ -43,7 +41,7 @@ A **counterfactual explanation** is a statement of the form:
 
 > *"If X had been different, then Y would have been different."*
 
-In the context of ML models, Wachter, Mittelstadt, and Russell (2017) formalized this as:
+In the context of bank loan rejection, this can be phrased as:
 
 > *"You were denied a loan because your income was £30,000. If your income had been £45,000, you would have been approved."*
 
@@ -61,10 +59,10 @@ Counterfactuals differ from standard feature importance methods (like SHAP or LI
 Ruth Byrne (2019) showed that counterfactual thinking is deeply embedded in human cognition. People naturally imagine "if only" scenarios after negative events, and they tend to:
 
 1. **Mutate exceptional events** rather than normal ones (it's easier to imagine "if only I had taken a different route" than "if only gravity had been weaker")
-2. **Prefer proximal causes** over distal ones
-3. **Favor actions over inactions** as counterfactual antecedents
+2. **Prefer proximal causes** over distal ones — a *proximal* cause is one that is immediately and directly responsible for an outcome, while a *distal* cause is further back in the causal chain. People find it more natural to undo the cause closest in time or mechanism to the event, rather than some earlier, more remote factor.
+3. **Favor actions over inactions** as counterfactual antecedents — when imagining an alternative outcome, people are more likely to undo something that was *actively done* ("if only I had not pressed that button") than something that was *not done* ("if only I had remembered to check the settings"). Action feels more mutable than inaction.
 
-Good counterfactual explanation systems should align with these cognitive tendencies. An explanation that requires changing someone's age or birthplace is not only legally problematic — it's cognitively useless because it's not something the person can realistically imagine changing.
+Good counterfactual explanation systems should align with these cognitive tendencies. An explanation that requires changing someone's age or birthplace is cognitively useless because it's not something the person can realistically imagine changing.
 
 ---
 
@@ -99,23 +97,29 @@ This elegant formulation requires no access to model internals — only the abil
 Not all counterfactuals are equally useful. Mothilal et al. (2020) identify several desiderata:
 
 ### 4.4.1 Proximity
-The counterfactual should be as close as possible to the original instance. Changing 10 features is less useful than changing 1.
+The counterfactual should be as close as possible to the original instance. A counterfactual that requires only a small shift in feature values is more useful than one that requires large, dramatic changes.
+
+> ❌ Far: Increase your income by €50,000 (a very large jump from your current €30,000).
+> ✅ Close: Increase your income by €8,000.
 
 ### 4.4.2 Sparsity
 Prefer explanations that change **few features**. This is cognitively and practically easier to act on.
 
-> ❌ Bad: Change your age, income, ZIP code, employment type, and marital status.  
-> ✅ Good: Increase your income by €8,000.
+> ❌ Low sparsity: Change your income, credit score, employment years, and ZIP code.  
+> ✅ High sparsity: Increase your income by €8,000 (only one feature changed).
 
 ### 4.4.3 Feasibility / Actionability
 Some features cannot be changed — age, nationality, or past credit history. A counterfactual that says "if you were 10 years younger" is useless and potentially discriminatory. Good systems restrict counterfactuals to **actionable features**.
+
+> ❌ Infeasible: Change your age, nationality, or past credit history.  
+> ✅ Feasible: Increase your income by €8,000 or improve your credit score by 60 points.
 
 ### 4.4.4 Diversity
 A single counterfactual is often insufficient. A user should receive **multiple diverse alternatives**, each offering a different path to the desired outcome:
 
 - Path A: Increase income by €10,000
-- Path C: Increase income by €5,000 AND reduce debt by €3,000
-- Path B: Increase income by €4,000 AND age by 7
+- Path B: Increase income by €5,000 AND reduce debt by €3,000
+- Path C: If the applicant were 7 years older (and therefore had a longer credit history), they would only need an income increase of €4,000.
 
 
 ![Decision boundary showing diverse counterfactual paths](figures/decision_boundary.png)
@@ -150,6 +154,11 @@ $$\min_{CF_1, \ldots, CF_k} \frac{1}{k} \sum_{i=1}^k \text{loss}(CF_i) - \frac{1
 
 The second term *maximizes* pairwise distances among the generated counterfactuals, ensuring diversity.
 
+**How does DiCE search for counterfactuals?** Rather than performing gradient descent from a single starting point like Wachter et al., DiCE initializes multiple candidate counterfactuals — either randomly sampled from the feature space, or drawn from the training data points that already have the desired target class. It then jointly optimizes all $k$ candidates simultaneously using the objective above. This means the candidates are nudged both toward the desired class (via the prediction loss term) *and* away from each other (via the diversity term). In practice, DiCE supports multiple backends:
+- **Gradient-based**: Uses automatic differentiation (PyTorch/TensorFlow) to directly optimize the objective for differentiable models.
+- **KD-tree / random sampling**: For black-box models, DiCE can sample counterfactuals from a k-d tree built over training data with the target class, filtering by constraints.
+- **Genetic algorithms**: An evolutionary search method that works when gradients are unavailable.
+
 DiCE also supports:
 - **Feature constraints**: Lock immutable features (e.g., age, gender)
 - **Range constraints**: Specify allowed value ranges per feature
@@ -157,11 +166,24 @@ DiCE also supports:
 
 ### 4.5.3 FACE — Feasible and Actionable Counterfactual Explanations (Poyiadzi et al., 2020)
 
-FACE uses a **graph-based approach** over the training data. It finds paths through densely populated regions of feature space, ensuring that the counterfactual path is traversable through plausible intermediate states — not just a straight jump across the decision boundary.
+FACE uses a **graph-based approach** over the training data to find counterfactuals that are not only valid but also *reachable* through plausible intermediate states. The key insight is that a counterfactual should not just exist in a desired region of feature space — there should be a realistic, densely-populated *path* that connects the original instance to it.
+
+**How it works:** FACE constructs a weighted graph over the training data, where edges connect nearby data points and edge weights reflect the density of the feature space between them (e.g., using kernel density estimation). It then applies shortest-path algorithms (such as Dijkstra's) to find the path from the original instance $\mathbf{x}$ to a target instance $\mathbf{x}'$ that maximises traversal through high-density regions. The result is a counterfactual that is not only close in distance but *feasibly reachable* through the data manifold.
 
 Think of it as the difference between:
-- Teleporting to the other side of a wall (Wachter)
-- Walking through a door in the wall (FACE)
+- Teleporting to the other side of a wall (Wachter) — valid destination, but no viable path
+- Walking through a door in the wall (FACE) — valid destination, connected by a realistic route
+
+![FACE counterfactual diagram showing paths A, B, C, and D from original instance x](figures/FACE.png)
+
+**Figure 4.2:** A, B, C, and D are four candidate counterfactuals of ×, where × (marked with a cross on the left) is the original instance. The x-axis and y-axis represent two input features. The background colour indicates the model's predicted probability — darker red means more confidently classified as the target class, while the light band near the decision boundary is where the model is uncertain. Blue dots are training samples from the original class; red dots are from the target class.
+
+- **A** is found by minimising the ℓ₂ distance — it is the closest counterfactual, but sits in a low-density region near the boundary where real data is sparse.
+- **B** is a generic point with a large classification margin (confidently in the target class), but it is also in a low-density area.
+- **C** lies in a high-density region and has a large margin, but the path from × to C passes through a low-density corridor.
+- **D** is chosen by FACE as the best counterfactual: it lies in a high-density region, has a strong classification margin, and is connected to × via a high-density path — meaning there are real, plausible data points along the way. This makes D the most feasible option: the individual can realistically transition from × to D in small, data-supported steps.
+
+*Source: Poyiadzi et al., 2020*
 
 ### 4.5.4 Growing Spheres (Laugel et al., 2017)
 
@@ -342,7 +364,7 @@ No single algorithm excels on all metrics. There is an inherent tension:
 - **Diversity vs. Proximity**: Diverse CFs are by definition more spread out, so some will be farther away
 - **Sparsity vs. Validity**: Changing fewer features may make it harder to find a valid CF
 
----
+--- 
 
 ## 4.10 Reflective Questions
 
