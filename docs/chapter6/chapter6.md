@@ -55,13 +55,13 @@ With that out of the way, let's look at the methods.
 
 ### The Basic Idea
 
-The idea is embarrassingly simple. Simonyan, Vedaldi, and Zisserman (2013) noticed that if you run backpropagation on a class score rather than a loss, the gradient you get at the input pixels tells you which pixels the network is currently "paying attention to." Pixels with large gradients are pixels where a small nudge would change the prediction the most.
+Simonyan, Vedaldi, and Zisserman (2013) noticed something worth paying attention to: if you run backpropagation on a class score rather than a loss, the gradient you get at the input pixels tells you which pixels the network is currently "paying attention to." Pixels with large gradients are pixels where a small nudge would change the prediction the most.
 
-Formally, for a class score $S_c$ and input $\mathbf{x}$:
+Formally, let $\mathbf{x}$ be an input image and $S_c(\mathbf{x})$ be the network's score for class $c$ before the softmax. For each pixel location $(i, j)$, the saliency value $M_{i,j}$ is:
 
 $$M_{i,j} = \left| \frac{\partial S_c}{\partial x_{i,j}} \right|$$
 
-Because the input has three colour channels, you compute a $3 \times H \times W$ gradient tensor and collapse it to $H \times W$ by taking the channel-wise maximum at each position.
+where $x_{i,j}$ is the pixel value at position $(i, j)$. Because the input has three colour channels, you compute a $3 \times H \times W$ gradient tensor (with $H$ and $W$ the image height and width) and collapse it to $H \times W$ by taking the channel-wise maximum at each position.
 
 ![Vanilla gradient saliency: pipeline from input to map](figs/saliency_map.png)
 
@@ -85,7 +85,7 @@ Running this on a ResNet-18 classifying a Samoyed photograph produces:
 
 ![Vanilla saliency applied to a Samoyed image](figs/nb_vanilla_saliency.png)
 
-*__Figure 4.__ Vanilla saliency on a Samoyed photograph (ResNet-18, predicted class: "Samoyed"). The map loosely localizes to the dog, but scattered bright pixels appear across the background. This noisiness has a precise cause: deep ReLU networks have jagged gradient landscapes that flip sign near activation boundaries. One backward pass reads one unstable point in that landscape.*
+*__Figure 4.__ Vanilla saliency on a Samoyed photograph (ResNet-18, predicted class: "Samoyed"). The map loosely localizes to the dog, but scattered bright pixels appear across the background. This noisiness has a precise cause: deep ReLU networks have jagged gradient landscapes that flip sign near activation boundaries. One backward pass reads one unstable point in that landscape. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
 The noisiness is not a bug in the implementation. It's an honest readout of a genuinely unstable gradient field. Neural networks are not trained to have smooth gradients because they are trained to classify images correctly, and these are not the same objective.
 
@@ -110,11 +110,17 @@ def smoothgrad(model, input_tensor, class_idx, n_samples=25, sigma=0.15):
 
 ![SmoothGrad vs vanilla saliency](figs/nb_smoothgrad.png)
 
-*__Figure 5.__ Left: vanilla saliency is scattered. Centre: SmoothGrad ($n=25$) where the dog's body dominates, background noise largely suppressed. Right: SmoothGrad overlaid on the original. Averaging across 25 perturbed copies removes the high-frequency gradient noise without changing the network architecture.*
+*__Figure 5.__ Left: vanilla saliency is scattered. Centre: SmoothGrad ($n=25$) where the dog's body dominates, background noise largely suppressed. Right: SmoothGrad overlaid on the original. Averaging across 25 perturbed copies removes the high-frequency gradient noise without changing the network architecture. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
-### Deconvnet and the ReLU Question
+### Deconvnet
 
-Zeiler & Fergus (2014) built the **Deconvnet** not as a post-hoc analysis tool but as a core part of their training methodology. They used it to inspect what CNN filters had learned, then redesigned the filters when the visualizations looked wrong. It inverts the forward pass layer by layer to reconstruct the input pattern that caused a chosen neuron to fire.
+Saliency maps answer one question: which pixels would change the output if perturbed? Useful, but limited. Knowing that a pixel is sensitive tells you nothing about *what* the network learned to look for. If layer 4 contains a "fur texture" detector, a saliency map will tell you that region matters; it will not show you the actual texture pattern the detector responds to. For that you need to invert the forward pass and trace signal from a chosen neuron back to the pixel level, recovering the patch of the input that triggered it.
+
+Matthew Zeiler and Rob Fergus introduced the **Deconvnet** in their 2014 paper not as an explanation tool but as a design tool. During training they would pause, run the Deconvnet on each filter, look at what the filter had learned to detect, and then change the architecture when something looked wrong. The well-known AlexNet fix of reducing the first-layer stride from 4 to 2 came directly from a Deconvnet visualization that showed the learned filters were aliased and uninterpretable at stride 4.
+
+### How the Deconvnet works
+
+Zeiler & Fergus (2014) built the Deconvnet not as a post-hoc analysis tool but as a core part of their training methodology. They used it to inspect what CNN filters had learned, then redesigned the filters when the visualizations looked wrong. It inverts the forward pass layer by layer to reconstruct the input pattern that caused a chosen neuron to fire.
 
 ![Deconvnet pipeline and its three mechanisms](figs/deconv_overview.png)
 
@@ -156,15 +162,17 @@ This conservation law is what separates LRP from gradient methods. The total rel
 
 ### The Redistribution Rule
 
-For a linear layer with pre-activation $z_j = \sum_i a_i w_{ij}$, the simplest rule, **LRP-0**, redistributes each neuron's relevance backward proportional to its weighted input:
+For a linear layer, the simplest rule, **LRP-0**, redistributes each neuron's relevance backward proportional to its weighted input:
 
 $$R_i = \sum_j \frac{a_i w_{ij}}{z_j} R_j$$
 
+Here, \(a_i\) is the activation of neuron \(i\) in the current layer, \(w_{ij}\) is the weight of the connection from neuron \(i\) to neuron \(j\) in the next layer, \(z_j = \sum_i a_i w_{ij}\) is the pre-activation of neuron \(j\), and \(R_j\) is the relevance already assigned to neuron \(j\). The rule says: neuron \(i\) receives a share of \(R_j\) proportional to how much it contributed to \(z_j\).
+
 Three refinements handle real networks:
 
-**LRP-$\varepsilon$** adds a small stabilizer to the denominator, suppressing contributions from neurons that barely activated. The result is sparser, more focused maps: fewer spurious attributions.
+**LRP-\(\varepsilon\)** adds a small stabilizer \(\varepsilon\) to the denominator, suppressing contributions from neurons that barely activated. The result is sparser, more focused maps: fewer spurious attributions.
 
-**LRP-$\gamma$** tilts redistribution toward positive contributions: $R_i = \sum_j \frac{a_i(w_{ij} + \gamma w_{ij}^+)}{Z_j} R_j$. This works best in lower convolutional layers where positive feature detectors dominate.
+**LRP-\(\gamma\)** tilts redistribution toward positive contributions: \(R_i = \sum_j \frac{a_i(w_{ij} + \gamma w_{ij}^+)}{Z_j} R_j\), where \(\gamma > 0\) controls how strongly positive weights are amplified and \(w_{ij}^+\) denotes the positive part of \(w_{ij}\). This works best in lower convolutional layers where positive feature detectors dominate.
 
 **The composite strategy** (Montavon et al., 2019) combines all three: LRP-$\gamma$ in lower convolutional layers, LRP-$\varepsilon$ in upper layers and fully connected classifier. This is the configuration that makes LRP work reliably on standard deep CNNs like VGG-16.
 
@@ -174,11 +182,11 @@ A subtlety worth knowing: input pixels, after ImageNet normalization, are not no
 
 ![LRP relevance map vs vanilla saliency](figs/nb_lrp_vs_saliency.png)
 
-*__Figure 9.__ Left: input image (Samoyed). Centre: vanilla saliency, unsigned, distributed, no consistent interpretation of sign. Right: LRP map, signed. Red regions support the "Samoyed" prediction; blue regions suppress it. The map concentrates positive relevance on the dog's head and body while flagging background patches as actively working against the classification.*
+*__Figure 9.__ Left: input image (Samoyed). Centre: vanilla saliency, unsigned, distributed, no consistent interpretation of sign. Right: LRP map, signed. Red regions support the "Samoyed" prediction; blue regions suppress it. The map concentrates positive relevance on the dog's head and body while flagging background patches as actively working against the classification. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
 ![LRP relevance overlay](figs/nb_lrp_result.png)
 
-*__Figure 10.__ LRP relevance overlaid on the input. Positive relevance (red) concentrates on the dog's face and upper body; patches of background grass generate negative relevance (blue). A clinician seeing this on a chest X-ray would know not only which regions the model examined, but which ones supported versus contradicted the diagnosis.*
+*__Figure 10.__ LRP relevance overlaid on the input. Positive relevance (red) concentrates on the dog's face and upper body; patches of background grass generate negative relevance (blue). A clinician seeing this on a chest X-ray would know not only which regions the model examined, but which ones supported versus contradicted the diagnosis. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
 The practical significance of sign is hard to overstate. Saliency maps show you where the model is sensitive. LRP shows you which pixels are working *for* the prediction and which are working *against* it. This is completely invisible to any gradient-based saliency method.
 
@@ -202,7 +210,7 @@ The answer is found by gradient ascent on the input itself. Fix the network weig
 
 $$\mathbf{x}_{t+1} = \mathbf{x}_t + \eta \cdot \frac{\partial a(\mathbf{x}_t)}{\partial \mathbf{x}_t}$$
 
-where $a(\mathbf{x})$ is the activation of the target neuron. Add an $\ell_2$ regularization term $\lambda \|\mathbf{x}\|^2$ to prevent pixel values from growing without bound:
+where $a(\mathbf{x})$ is the activation of the target neuron and $\eta > 0$ is the step size. Add an $\ell_2$ regularization term weighted by $\lambda > 0$ to prevent pixel values from growing without bound:
 
 $$\mathbf{x}^* = \arg\max_{\mathbf{x}} \; a(\mathbf{x}) - \lambda \|\mathbf{x}\|^2$$
 
@@ -214,15 +222,17 @@ The results look strange. For a neuron associated with the "dog" class, the opti
 
 Naive gradient ascent produces abstract textures. Regularization makes results more interpretable: **$\ell_2$ weight decay** penalizes large pixel values; **Gaussian blur** applied periodically encourages spatial coherence; **total variation penalty** enforces piecewise smoothness.
 
-**Deep Generative Network AM (DGN-AM)** (Qin et al., 2018) replaces pixel-space optimization with optimization in the latent space of a GAN:
+**Deep Generative Network AM (DGN-AM)** (Qin et al., 2018) takes a different route. Rather than optimizing pixel values directly, it optimizes in the *latent space* of a pre-trained GAN generator \(G\). A GAN's latent space is a compact, lower-dimensional vector space where every point \(\mathbf{z}\) maps to a naturalistic-looking image \(G(\mathbf{z})\). Because the generator has already learned the statistical structure of real photographs during training, any point you pick in that space produces something that looks like a plausible image, not arbitrary pixel noise.
+
+The optimization becomes:
 
 $$\mathbf{z}^* = \arg\max_{\mathbf{z}} \; a(G(\mathbf{z})) - \lambda \|\mathbf{z}\|^2$$
 
-Since $G$ has learned to produce naturalistic images, $G(\mathbf{z}^*)$ looks like a plausible photograph. The difference in output quality is stark:
+Instead of asking "which pixel pattern maximally activates this neuron?", DGN-AM asks "which point in the space of realistic images maximally activates this neuron?" The constraint to the natural image manifold is what produces recognizable outputs: the optimizer can only reach images the GAN knows how to generate, so abstract high-frequency textures are off the table. The difference in output quality is stark:
 
 ![AM vs DGN-AM comparison](figs/fig_am_dgn.png)
 
-*__Figure 12.__ Activation Maximization (top row) versus DGN-AM (bottom row) for five ImageNet classes. Standard AM yields abstract textures. DGN-AM, constrained to the natural image manifold, produces recognizable objects: a broom, a flip phone, lipstick, a table lamp, a water jug. (Images from Qin et al., 2018.)*
+*__Figure 12.__ Activation Maximization (top row) versus DGN-AM (bottom row) for five ImageNet classes. Standard AM yields abstract textures. DGN-AM, constrained to the natural image manifold, produces recognizable objects: a broom, a flip phone, lipstick, a table lamp, a water jug. Source: Qin et al. (2018)*
 
 Activation Maximization is the only method in this chapter that is *example-independent*. It probes what the model has learned in the abstract, divorced from any particular input. The psychedelic character of naive outputs is a finding about deep network representations, not a failure. Those representations are genuinely alien to human conceptual categories.
 
@@ -238,11 +248,11 @@ Vision Transformers (Dosovitskiy et al., 2020) approach images differently from 
 
 *__Figure 13.__ ViT architecture overview. The input image is split into patches, each embedded as a token. CLS is prepended. After $N$ transformer blocks, the CLS token aggregates global context and feeds into an MLP classifier. The attention weights produced at each block are directly accessible.*
 
-Each transformer block computes multi-head self-attention. For head $h$:
+Each transformer block computes multi-head self-attention. For head $h$, the query matrix $Q_h$ and key matrix $K_h$ are linear projections of the token sequence, each of dimension $N \times d_k$ where $N$ is the number of tokens and $d_k$ is the projection dimension. The attention matrix is:
 
 $$A_h = \text{softmax}\!\left(\frac{Q_h K_h^\top}{\sqrt{d_k}}\right) \in \mathbb{R}^{N \times N}$$
 
-The entry $A_h[i, j]$ measures how strongly token $i$ attends to token $j$. Row 0, the CLS token's row, tells you which patches the classification head "looked at" when forming its summary representation. This is interpretability for almost free: the model's internal attention weights are directly accessible as intermediate quantities, no backward pass required.
+The $\sqrt{d_k}$ factor in the denominator keeps the dot products from growing large enough to push the softmax into regions of near-zero gradient. The entry $A_h[i, j]$ measures how strongly token $i$ attends to token $j$. Row 0, the CLS token's row, tells you which patches the classification head "looked at" when forming its summary representation. This is interpretability for almost free: the model's internal attention weights are directly accessible as intermediate quantities, no backward pass required.
 
 ### Reading Attention Maps
 
@@ -326,9 +336,9 @@ And here they are applied to the same input:
 
 ![All four methods on the same input](figs/fig8_comparison.png)
 
-*__Figure 19.__ All four methods applied to the same golden retriever image (predicted: "golden retriever," confidence 0.87). From left: input image; vanilla saliency (unsigned, noisy); LRP relevance (red = supports, blue = opposes); activation maximization output for the "dog" neuron (abstract texture); ViT attention rollout (smooth, concentrated on the subject). Each method reveals something the others do not.*
+*__Figure 19.__ All four methods applied to the same Samoyed image (predicted: "Samoyed," confidence 0.87). From left: input image; vanilla saliency (unsigned, noisy); LRP relevance (red = supports, blue = opposes); activation maximization output for the "Samoyed" neuron (abstract texture); ViT attention rollout (smooth, concentrated on the subject). Each method reveals something the others do not. Samoyed image sourced from PyTorch ([pytorch/hub](https://github.com/pytorch/hub/blob/master/images/dog.jpg)).*
 
-**When to use what:**
+### When to use what
 
 Use **vanilla saliency or SmoothGrad** for rapid debugging. Fast, require no architectural adaptation, pass the sanity check. Do not use Guided Backpropagation anywhere faithfulness matters.
 
