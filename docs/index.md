@@ -1,58 +1,53 @@
-# Interpreting Machine Learning
+# Interpreting Machine Learning: A Gentle Introduction
 
-Welcome to *Interpreting Machine Learning*, a collaborative book exploring concepts in **eXplainable Artificial Intelligence (XAI)**.
+Welcome to *Interpreting Machine Learning*, a collaborative book exploring the growing field of **eXplainable Artificial Intelligence (XAI)**.  
 
-This book was developed by seminar students of **CSEN1152 (Seminar of XAI: Concepts, Applications and Future Directions)** during the Spring of 2026 at the **German University in Cairo (GUC)**.  
-**Instructor:** Amr S. Mohamed
+This book was developed by seminar students of the seminar course: *Seminar on XAI: Concepts, Applications and Future Directions)*, during the Spring of 2026 at the **German University in Cairo (GUC)**.  
+
+Instructor: Amr S. Mohamed
+Email: amr(dot)saber(at)guc(dot)edu(dot)eg
 
 ---
 
 ## 📖 About the Book
-The book covers a wide range of topics in XAI, from foundational concepts to advanced applications in healthcare and federated learning. Each chapter is authored by students and reflects both theoretical insights and practical case studies.
+Artificial intelligence is increasingly shaping decisions across domains. Yet, as models grow in complexity, understanding *why* they make certain predictions becomes both a technical, regulatory, and ethical necessity. This book introduces readers to the principles, practices, and challenges in XAI.  
 
 ---
 
 ## 📚 Table of Contents
+
 - **Chapter 1 – Introduction**  
-  Introduces key concepts in XAI, including motivations, definitions, and the importance of interpretability... [placeholder]
+  Provides an overview of XAI, including its motivations, definitions, and the importance of interpretability in modern machine learning. It sets the stage by explaining why transparency matters for trust, safety, and adoption of AI systems.
 
 - **Chapter 2 – Regulations**  
-  Discusses regulatory frameworks and ethical considerations shaping the use of AI.  ... [placeholder]
+  Examines the regulatory and ethical frameworks guiding the responsible use of AI. Topics include GDPR, EU AI Act, and the role of governance in regulating AI.
 
 - **Chapter 3 – Feature-based Explanations**  
-  Explores methods such as SHAP, LIME, and feature importance metrics.  ... [placeholder]
+  Introduces techniques such as PFI, SHAP, LIME, and feature importance metrics. The chapter explains how these methods help identify which input features most influence a model’s predictions.
 
 - **Chapter 4 – Contrastive and Counterfactual Explanations**  
-  Examines how explanations can highlight *why not* and *what if* scenarios.  ... [placeholder]
+  Explores explanations that answer *“Why not?”* and *“What if?”*. Readers learn how contrastive reasoning highlights alternative outcomes and how counterfactuals provide actionable insights for decision-making. Methods discussed include DiCE and FACE.
 
 - **Chapter 5 – Example and Case-based Explanations**  
-  Focuses on exemplar-based reasoning and case-driven interpretability.  ... [placeholder]
+  Discusses exemplar-based reasoning, where models justify predictions by referencing similar past cases. Methods discussed include prototypes and criticisms, ProtoPNet, TCAV, and influence functions.
 
 - **Chapter 6 – Deep Learning Interpretability**  
-  Covers saliency maps, attention mechanisms, and visualization techniques.  ... [placeholder]
+  Focuses on methods for interpreting complex neural networks, including saliency maps, layer-wise propagation, activation maximization, attention mechanisms, and visualization techniques. 
 
 - **Chapter 7 – Mechanistic Interpretability in Transformers**  
-  Analyzes transformer architectures and interpretability at the circuit level.  ... [placeholder]
+  Analyzes transformer architectures at the circuit level. The chapter explains how attention heads, layers, and pathways can be dissected to reveal the inner workings of large language models.
 
 - **Chapter 8 – Explainability with Federated Learning**  
-  Investigates challenges of distributed learning and privacy-preserving explanations.  ... [placeholder]
+  Investigates the challenges of distributed learning, where data remains decentralized and the challenges that XAI faces in federated learning
 
 - **Chapter 9 – Applications in Healthcare**  
-  Highlights real-world case studies of XAI in medical diagnosis and decision support.  ... [placeholder]
+  🚧 [Still in construction] Discusses the challenges that XAI faces in healthcare. 
 
 - **Chapter 10 – Gaps and Future Directions**  
-  Identifies open challenges, research gaps, and future opportunities in XAI.... [placeholder]
+ 🚧 [Still in construction] Identifies open challenges, research gaps, and opportunities for future exploration in XAI. 
 
 ---
 
 ## 📑 Citation
-To cite sections from this book, please use the following BibTeX entry, **citing the exact student author of the chapter**:
-
-```bibtex
-@misc{interpretingML2026,
-  title     = {Interpreting Machine Learning, Chapter #},
-  author    = {Please cite the chapter's author's name},
-  year      = {2026},
-  institution = {German University in Cairo},
-  note      = {Instructor: Amr S. Mohamed}
-}
+Each chapter was written by one or more students. 
+Each chapter has its own BibTeX entry. To cite chapters or sections from this book, please use the BibTeX entry at the end of each chapter.
