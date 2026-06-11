@@ -28,7 +28,7 @@ The authors further introduce the notion of *comprehensibility* as the ability o
 
 ### 2.3 Technical Approaches to XAI
 
-Holzinger et al. survey a range of methods aimed at making ML models more explainable. These include rule extraction from neural networks, decision tree approximations of complex models, attention mechanisms in deep learning, and visualization techniques such as saliency maps and activation atlases. The authors note that no single approach is universally suitable — the appropriate technique depends on the model type, the task, the domain, and the intended audience for the explanation.
+Holzinger et al. survey a range of methods aimed at making ML models more explainable. These include rule extraction from neural networks, decision tree approximations of complex models, attention mechanisms in deep learning. The authors note that no single approach is universally suitable — the appropriate technique depends on the model type, the task, the domain, and the intended audience for the explanation.
 
 Particularly relevant to the medical domain is the authors' discussion of *interactive machine learning* (iML), in which human experts are involved in the learning process itself rather than merely receiving outputs. This participatory model of AI development is argued to produce systems that are not only more accurate (benefiting from expert domain knowledge) but also more interpretable, because human cognitive structures are embedded in the model's reasoning process from the outset. This stands in contrast to post-hoc explanation methods, which attempt to impose interpretability on an already-trained black-box model.
 
