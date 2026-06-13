@@ -4,7 +4,7 @@
 
 ---
 
-## The Data You Never Agreed to Share !
+## 1. The Data You Never Agreed to Share
 
 Think about the last message you sent. Not the one you typed and deleted,
 but the one that actually went through. Something personal, something you
@@ -42,7 +42,7 @@ bank holds valuable transaction data. But sharing that with a competitor,
 even in the name of building a better model, is something no bank would
 agree to.
 
-The pattern is always the same --> the data that would make models most useful
+The pattern is always the same → the data that would make models most useful
 is also the data that cannot move.
 
 The question is not whether the data is valuable. It clearly is.
@@ -54,7 +54,7 @@ privacy and transparency are not natural allies. Getting both at the same
 time is one of the genuinely hard unsolved problems in machine learning
 today, and this chapter walks you through why.
 
-## Three Forces Keeping Data Where It Is
+## 2. Three Forces Keeping Data Where It Is
 
 The problem Google faced with Gboard is not unique to keyboards or to Google.
 It is a structural problem that shows up across almost every domain where
@@ -62,10 +62,9 @@ machine learning could genuinely help people. And it comes from three very
 different directions.
 
 ![Three reasons data cannot move](figs/fig2.png)
-*Figure 2. Three separate forces — law, volume, and ownership — each
-independently block the centralization of sensitive data.*
+*Figure 2. Three separate forces — law, volume, and ownership — each independently block the centralization of sensitive data.*
 
-### The rules would not allow it
+### 2.1 The rules would not allow it
 
 Some data is protected by law, and for good reason. Patient medical records,
 bank transactions, personal communications — laws exist specifically to
@@ -86,7 +85,7 @@ data with other banks. But it cannot do that either.
 The most valuable training data in the world also carries the strictest
 legal protection.
 
-### The data was simply too big to move
+### 2.2 The data was simply too big to move
 
 Even when the law allows it, the volume makes centralization impractical.
 Think about how much data is being generated every second across billions
@@ -99,7 +98,7 @@ every day would be staggering. The storage costs, the transfer time, the
 energy consumption, all of it adds up to something that simply does not
 scale in the real world.
 
-### The data belonged to someone
+### 2.3 The data belonged to someone
 
 Institutions often refuse to share their data and this is different from privacy protection.
 
@@ -115,7 +114,7 @@ engineering could simply work around. The data was not going to move.
 So the question became something different entirely: What if the model
 moved instead?
 
-## Federated Learning: The Elegant Workaround
+## 3. Federated Learning: The Elegant Workaround
 
 Google's answer to the data problem was not to find a clever legal loophole
 or build better anonymization tools. It was to rethink the whole pipeline entirely.
@@ -135,7 +134,7 @@ device.
 The name comes from the idea of a federation: a group of independent
 participants working toward a shared goal without giving up their autonomy.
 
-### Starting with the Intuition
+### 3.1 Starting with the Intuition
 
 The math behind FL will come in a moment. But first, here is a picture that makes the whole idea snap into place.
 
@@ -157,7 +156,7 @@ corrections are the gradient updates. The students are the clients.
 The teacher never sees their libraries.
 
 
-### The FedAvg Algorithm
+### 3.2 The FedAvg Algorithm
 
 The algorithm behind this is called **FedAvg** (Federated Averaging),
 Here is exactly how one round of FL works.
@@ -182,33 +181,45 @@ B = ∞ means the client uses all its local data as a single batch.
 **The objective.** The server wants to minimize the average error across
 all training examples everywhere:
 
-$$\min_{w} \, f(w) = \frac{1}{n} \sum_{i=1}^{n} f_i(w)$$
+$$\min_{w} f(w) = \frac{1}{n} \sum_{i=1}^{n} f_i(w)$$
+
+Where $w$ are the model weights we are trying to find, $f(w)$ is the
+global loss (how wrong the model currently is on average), $f_i(w)$ is
+the loss on a single training example $i$, and $n$ is the total number
+of training examples across all clients.
 
 Because the data is split across $K$ clients, this becomes a weighted
 sum of each client's local loss:
 
-$$f(w) = \sum_{k=1}^{K} \frac{n_k}{n} \, F_k(w)$$
+$$f(w) = \sum_{k=1}^{K} \frac{n_k}{n} F_k(w)$$
 
-Where $n_k$ is the number of data points at client $k$, $n$ is the total,
-and $F_k(w)$ is how wrong the model is on that client's private data.
+Where $k$ is the index for a specific client, $n_k$ is the number of
+data points at client $k$, and $F_k(w)$ is how wrong the model is on
+that client's private data.
 
 **What each client does.** After receiving the global model, each client
 runs gradient descent locally for $E$ epochs:
 
-$$w^k \leftarrow w^k - \eta \, \nabla F_k(w^k)$$
+$$w^k \leftarrow w^k - \eta \nabla F_k(w^k)$$
 
-Where $\eta$ is the learning rate, the size of each update step.
+Where $w^k$ is the local copy of the model at client $k$, $\eta$ is
+the learning rate (the size of each update step), and $\nabla F_k(w^k)$
+is the gradient of the local loss.
 
-**What the server does.** 
-After receiving all the updated weights, the server computes a weighted average:
+**What the server does.** After receiving all the updated weights,
+the server computes a weighted average:
 
-$$w_{t+1} = \sum_{k \in S_t} \frac{n_k}{n} \, w^k_{t+1}$$
+$$w_{t+1} = \sum_{k \in S_t} \frac{n_k}{n} w^k_{t+1}$$
+
+Where $w_{t+1}$ is the new global model after round $t$, and $S_t$ is
+the set of clients selected in that round.
 
 Clients with more data pull the average more toward their local model.
 A hospital with 10,000 patient records contributes far more than one
 with 500.
 
 **The full algorithm in pseudocode:**
+
     SERVER:
       initialize w₀
       for each round t = 1, 2, 3, ...:
@@ -228,7 +239,7 @@ with 500.
 ![One FedAvg training round](figs/fig4_FL-round.png)
 *Figure 5. A single round of FedAvg: the model leaves the server, gets trained locally, and comes back changed.*
 
-## When the Math Creates Unfairness
+## 4. When the Math Creates Unfairness
 
 The weighted average at the heart of FedAvg works beautifully under one
 assumption: that all clients are drawing from the same statistical
@@ -238,7 +249,7 @@ identically distributed data.
 
 In federated learning, this assumption is almost never true.
 
-### The Non-IID Problem
+### 4.1 The Non-IID Problem
 
 ![IID vs Non-IID data](figs/fig19_non-IID.png)
 *Figure 6. IID means drawing from the same deck. Non-IID means every client has a completely different one.*
@@ -253,14 +264,14 @@ Consider a federated learning system training a model to detect pneumonia
 from chest X-rays across three hospitals:
 
 ![Hospital Example](figs/fig20_hospital.png)
-*Figure 7.*
+*Figure 7. Three hospitals, three completely different patient populations — their X-rays look nothing alike.*
 
 - **Hospital A** is a large urban hospital serving mostly elderly patients.
-Its X-rays are full of age-related findings —-> bone density changes,
+Its X-rays are full of age-related findings → bone density changes,
 calcification, conditions common in older adults.
 
 - **Hospital B** serves a rural population with younger patients and
-different infection patterns —-> malnourishment-related findings, different
+different infection patterns → malnourishment-related findings, different
 anatomical presentations.
 
 - **Hospital C** is a pediatric hospital. Its X-rays show children's
@@ -271,7 +282,7 @@ These three hospitals are not drawing from the same deck. They are living
 in different statistical worlds. And when FedAvg averages their model
 updates together, it uses this formula:
 
-$$w_{t+1} = \sum_{k=1}^{K} \frac{n_k}{n} \, w^k_{t+1}$$
+$$w_{t+1} = \sum_{k=1}^{K} \frac{n_k}{n} w^k_{t+1}$$
 
 Let us put real numbers to this. Suppose Hospital A has 10,000 records
 and Hospital C has 500. The total is 10,500.
@@ -296,12 +307,14 @@ the model might seem fine. It performs well on elderly patients, who make
 up the bulk of the evaluation data. The failure on pediatric cases hides
 behind the average.
 
-### Why XAI Is the Only Way to See This
+### 4.2 Why XAI Is the Only Way to See This
 
 This is the first place in the federated learning story where explainability
 becomes not just useful but necessary.
 
-If you run a Shap on each hospital's local model separately, something revealing appears.
+> If you are not familiar with SHAP, [Chapter 3 — Feature-based Explanations](https://amrmsab.github.io/interpreting_machine_learning/chapter3/chapter3/#4-shap-fair-credit-for-every-feature) covers it thoroughly.
+
+If you run SHAP on each hospital's local model separately, something revealing appears.
 Hospital A's model leans heavily on features like bone density and calcification. Because that is what its
 data looks like. Hospital C's model barely uses those features at all.
 
@@ -323,24 +336,24 @@ community discovered. A different paper landed that made everyone stop and recon
 something much more fundamental, the very foundation of the
 privacy guarantee that makes FL worth using in the first place.
 
-## The Privacy Illusion
+## 5. The Privacy Illusion
 
 Here is something the federated learning community believed for years:
 gradients are safe to share.
 
 It seems reasonable. A gradient is not your data. It is just a mathematical
 derivative, a vector of numbers describing how the model's error changes
-with respect to its weights.
-How much information about the original data could it possibly contain?
+with respect to its weights. How much information about the original data
+could it possibly contain?
+
+In 2019, three researchers at MIT — Zhu, Liu, and Han — decided to
+actually test this assumption. Their paper, *Deep Leakage from Gradients (DLG)*, published at NeurIPS 2019, proved that the assumption was
+completely wrong.
 
 ![What a gradient carries](figs/fig8_DLG.png)
 *Figure 10. A gradient looks like meaningless numbers. DLG proved it carries the original data inside it.*
 
-In 2019, three researchers at MIT — Zhu, Liu, and Han — decided to
-actually test this assumption. Their paper, *Deep Leakage from Gradients*,
-published at NeurIPS 2019, proved that the assumption was completely wrong.
-
-### The Attack
+### 5.1 The Attack
 
 Given only the gradient that a client sends and nothing else, an attacker
 can reconstruct the client's original private training data. Pixel by pixel
@@ -349,7 +362,7 @@ for images. Token by token for text.
 Here is how the attack actually works.
 
 ![how the attack looks](figs/fig9_DLG-attack.png)
-*Figure 11.*
+*Figure 11. Starting from random noise, the attacker iteratively adjusts the dummy input until its gradient matches the victim's — and a face emerges.*
 
 The attacker has access to three things: the model architecture $F$, the
 current model weights $W$, and the gradient $\nabla W$ that the victim
@@ -362,32 +375,26 @@ fake label $y'$. Think of them as pure visual noise — meaningless static.
 They run this fake data through the exact same model the victim used, and
 get what you might call dummy gradients:
 
-$$\nabla W' = \frac{\partial \, \ell(F(x', W), \, y')}{\partial W}$$
+$$\nabla W' = \frac{\partial \ell(F(x', W), y')}{\partial W}$$
 
-run the fake input $x'$ through the model $F$ with weights $W$, 
-compute the prediction error $\ell$, then calculate
-how that error changes with respect to the weights $W$. The result is the
+Where $\ell$ is the prediction error (loss), and $\nabla W'$ is the
 gradient that the fake data would have produced.
 
 Now the attacker has two gradients: the real one $\nabla W$ intercepted
 from the victim, and the fake one $\nabla W'$ produced by their dummy data.
 They measure the distance between them:
 
-$$\mathcal{D} = \| \nabla W' - \nabla W \|^2$$
+$$\mathcal{D} = \left\Vert \nabla W' - \nabla W \right\Vert^2$$
 
-This is just the squared difference between two vectors, a single number
-telling you how far apart the two gradients are. When $\mathcal{D} = 0$,
-the gradients are identical.
+So the attacker runs an optimization: adjust $x'$ and $y'$ step by step
+until the dummy gradient matches the real one as closely as possible:
 
-So the attacker runs an optimization: adjust $x'$ and $y'$ step by step until
-the dummy gradient matches the real one as closely as possible (minimize the distance)
+$$x^\ast, y^\ast = \arg\min_{x', y'} \left\Vert \frac{\partial \ell(F(x', W), y')}{\partial W} - \nabla W \right\Vert^2$$
 
-$$x^{*}, \, y^{*} = \arg\min_{x', y'} \left\| \frac{\partial \, \ell(F(x', W), y')}{\partial W} - \nabla W \right\|^2$$
+Where $x^\ast$ and $y^\ast$ are the reconstructed private input and label.
 
-Simply means: find the values of $x'$ and $y'$
-that make the expression inside as small as possible. In practice this is
-just gradient descent but instead of updating the model weights, 
-the attacker updates the fake image and label. 
+In practice this is just gradient descent but instead of
+updating the model weights, the attacker updates the fake image and label.
 The model stays frozen. The noise becomes a photograph.
 
 When $\mathcal{D}$ gets close to zero, the fake input has converged to
@@ -398,19 +405,21 @@ the real one.
 
 The algorithm in pseudocode:
 
-    Input: model F, weights W, real gradient ∇W
-    Output: reconstructed private data x, y
+```
+Input: model F, weights W, real gradient ∇W
+Output: reconstructed private data x*, y*
 
-    Initialize x' and y' as random noise
-    For i = 1 to n iterations:
-        Compute ∇W' from x' and y'
-        Measure distance D = ||∇W' − ∇W||²
-        Update x' and y' to reduce D
-    Return x', y'
+Initialize x' and y' as random noise
+For i = 1 to n iterations:
+    Compute ∇W' from x' and y'
+    Measure distance D = ||∇W' − ∇W||²
+    Update x' and y' to reduce D
+Return x', y' ← this is now x*, y*
+```
 
-### What the Results Showed
+### 5.2 What the Results Showed
 
-The researchers tested this on four datasets --> handwritten digits, natural
+The researchers tested this on four datasets → handwritten digits, natural
 images, street numbers, and face photographs. In every case, they started
 from pure random noise and optimized toward the real data.
 
@@ -420,15 +429,12 @@ pixel-perfect.
 
 The face photographs are the most striking result. By the end of
 optimization, the reconstructed face is almost indistinguishable from the
-ground truth. A real person's face! rebuilt from nothing but a gradient.
+ground truth. A real person's face, rebuilt from nothing but a gradient.
 
 ![DLG reconstruction from noise to pixel-perfect](figs/DLG.png)
-*Figure 12. Starting from pure noise (left), the DLG attack progressively
-reconstructs the original private image. By iteration 500, the result is
-nearly identical to the ground truth.*
+*Figure 12. Starting from pure noise (left), the DLG attack progressively reconstructs the original private image. By iteration 500, the result is nearly identical to the ground truth.*
 
-
-### The Defense That Costs Too Much
+### 5.3 The Defense That Costs Too Much
 
 The most natural defense against DLG is to add noise to gradients before
 sharing them. This is the principle behind **differential privacy**. By
@@ -453,24 +459,24 @@ A model that makes wrong decisions is not just inefficient. It is dangerous.
 And a wrong decision that nobody can explain is not just dangerous.
 It is indefensible.
 
-So If the model is built from data nobody can see, how do you trust it?
+So if the model is built from data nobody can see, how do you trust it?
 How do you explain its decisions? How do you know it is being fair?
 How do you know nobody tampered with it?
 
 This is where explainability enters the picture. Not as an academic
 exercise, but as a practical necessity.
 
-## Why Explainability Cannot Be Optional
+## 6. Why Explainability Cannot Be Optional
 
 In federated learning specifically, explainability is not a nice-to-have
 feature. It is a requirement that the system cannot function without, for
 three distinct reasons.
 
-### Trust
+### 6.1 Trust
 
 If a hospital is going to use a federated model to help diagnose cancer,
 the doctor needs to understand why the model made that prediction. Not
-just that it predicted cancer but wht. What features drove the decision.
+just that it predicted cancer but why. What features drove the decision.
 What the model was looking at.
 
 Saying "the federated global model says so" is not a sufficient
@@ -483,7 +489,7 @@ Without explainability, federated learning cannot be deployed where it
 matters most. The model may exist and perform well on benchmarks. But
 in practice, nobody will use it.
 
-### Fairness
+### 6.2 Fairness
 
 We already saw this problem in the non-IID section. When Hospital A
 dominates the weighted average with 95% of the update, the global model
@@ -492,7 +498,7 @@ are being diagnosed by a system that barely learned from them.
 
 XAI makes invisible unfairness visible.
 
-### Security and Debugging
+### 6.3 Security and Debugging
 
 DLG showed that a malicious server can reconstruct training data from
 gradients. But the attack can run in the other direction too. A malicious
@@ -517,10 +523,10 @@ detect.
 The problem is that the tools built to provide this explainability were
 designed for a completely different world.
 
-## The Core Tension: XAI Needs What FL Forbids
+## 7. The Core Tension: XAI Needs What FL Forbids
 
 ![core tension](figs/fig10_tension.png)
-*Figure 13.*
+*Figure 13. The tools built to explain models need exactly what federated learning was built to protect.*
 
 Post-hoc explanation methods were designed for a world where data is
 accessible. SHAP works by perturbing input features and observing how
@@ -529,24 +535,21 @@ thousands of synthetic samples around a real data point. Gradient-based
 saliency maps backpropagate through the model using specific training
 examples.
 
-Every one of these methods requires either access to data, access to
-gradient information, or both.
+> For a deeper dive into LIME, see [Chapter 3 — Feature-based Explanations](https://amrmsab.github.io/interpreting_machine_learning/chapter3/chapter3/#3-lime-explaining-one-decision-at-a-time).
 
-Federated learning was built specifically to prevent both.
+> For gradient-based saliency maps, see [Chapter 6 — Deep Learning Interpretability](https://amrmsab.github.io/interpreting_machine_learning/chapter6/chapter6/#saliency-maps).
 
-The server has no data. The gradients are dangerous to expose. The global
-model was built by averaging updates from clients whose data nobody can
-centrally access. The most important place to apply explainability "the
-global model" is also the place with the least information available to
-explain it.
+The most important place to apply explainability — the global model — is
+also the place with the least information available to explain it.
 
 So how do researchers respond to this? They went in four directions. 
 each making a different trade-off between how much you can explain and
 how much privacy you give up to do it.
 
----
 
-### 1. Local Explainability
+## 8. Four Directions, Four Trade-offs
+
+### 8.1 Local Explainability
 
 The most natural starting point is to keep everything local. Each client
 runs an explanation method on their own model using their own private data.
@@ -567,9 +570,8 @@ whole.
 ![Local explanations are fragments](figs/fig21_shap-avg.png)
 *Figure 14. One hundred local explanations exist. The global explanation does not.*
 
----
 
-### 2. Privacy-Safe XAI Adaptations
+### 8.2 Privacy-Safe XAI Adaptations
 
 If the problem is that XAI needs data the server does not have, the next
 logical move is to give it something that behaves like data without
@@ -626,15 +628,14 @@ In practice, most privacy-safe XAI systems combine these approaches:
 generate synthetic data, add noise, validate against a proxy. None of
 them is perfect. All of them are honest compromises.
 
----
 
-### 3. Intrinsic Interpretability
+### 8.3 Intrinsic Interpretability
 
 The most radical response to the tension is to sidestep it entirely by
 choosing model architectures that do not need post-hoc explanation at all.
 
 ![Intrinsic vs post-hoc](figs/fig13_intrinsic.png)
-*Figure 16. One model needs a flashlight to see inside it. The other is already open.*
+*Figure 16. Post-hoc methods interrogate a black box from the outside. Intrinsic models are already open.*
 
 Post-hoc methods work by interrogating a black-box model from the outside.
 Intrinsic interpretability means the model's reasoning is readable by
@@ -659,9 +660,8 @@ the gap is often acceptable. For complex inputs like raw images or free text, it
 usually is not, and the system is forced back toward deep networks and
 the post-hoc problem.
 
----
 
-### 4. Client Contribution Analysis
+### 8.4 Client Contribution Analysis
 
 The previous three approaches focus on explaining the model's predictions.
 This one asks a different question entirely: can we explain the training
@@ -673,6 +673,14 @@ the credit? The Shapley value is the mathematically principled answer —
 each player receives credit equal to their average contribution across
 every possible ordering in which they could join the group.
 
+This is the same mathematical framework that powers SHAP, but applied
+to a completely different question. SHAP uses Shapley values to measure
+how much each input feature contributed to a single prediction. Here,
+the players are not features — they are entire clients. The outcome is
+not a model prediction — it is the global model's overall performance.
+Instead of asking "which pixel mattered for this diagnosis?", we ask
+"which hospital mattered for building this model?"
+
 ![client contribution](figs/fig14_client-contri.png)
 *Figure 17. Credit is distributed proportionally to actual contribution, not equally among all participants.*
 
@@ -683,9 +691,9 @@ to when it does not?
 
 Formally:
 
-$$\phi_k = \sum_{S \subseteq K \setminus \{k\}} \frac{|S|! \, (|K| - |S| - 1)!}{|K|!} \left[ v(S \cup \{k\}) - v(S) \right]$$
+$$\phi_k = \sum_{S \subseteq K \setminus \{k\}} \frac{|S|!(|K| - |S| - 1)!}{|K|!} \left[ v(S \cup \{k\}) - v(S) \right]$$
 
-This looks dense but the idea is straightforward. $S$ is any group of
+This looks dense but the idea is straightforward. $S$ is any subset of
 clients that does not yet include client $k$. $v(S)$ is how well the
 model performs when trained on just those clients. $v(S \cup \{k\})$ is
 how well it performs when client $k$ is added. The difference is client
@@ -696,8 +704,10 @@ A simpler way to read it:
 
 $$\phi_k = \mathbb{E}_{S} \left[ v(S \cup \{k\}) - v(S) \right]$$
 
-The Shapley value is the expected performance gain from adding client $k$
-to a randomly assembled group. A hospital with rich, rare patient data
+Where $\phi_k$ is the Shapley value of client $k$, and the expectation
+is taken over all possible randomly assembled groups $S$.
+
+A hospital with rich, rare patient data
 will show a high Shapley value — adding it reliably improves the global
 model. A client with redundant or corrupted data will show a near-zero
 or negative value — including it adds noise rather than signal, which can
@@ -711,7 +721,6 @@ universe. In practice, researchers use Monte Carlo approximations —
 randomly sampling many orderings and averaging the marginal contributions
 observed — which gives a reliable estimate at a fraction of the cost.
 
-
 These four approaches represent the current toolkit for explaining
 federated models. But there is a fifth direction that emerged from the
 research, and it is perhaps the most surprising one. Several groups
@@ -720,7 +729,8 @@ rather than applied after it, do not just explain what the model learned.
 They make the training process itself more robust, more secure, and
 harder to corrupt.
 
-## XAI as a Security Tool
+
+## 9. XAI as a Security Tool
 
 Everything described so far treats XAI as something that happens after
 federated training. A layer of analysis applied to a finished model to
@@ -733,7 +743,7 @@ fairness, and security of the training process itself.
 
 XAI stops being a passive observer. It becomes a participant.
 
-### 1. Using SHAP for Smarter Client Selection
+### 9.1 Using SHAP for Smarter Client Selection
 
 In standard FedAvg, which clients participate in each round is decided
 randomly. A fraction $C$ of available clients is selected uniformly at
@@ -763,7 +773,7 @@ participants as equally valuable regardless of what they know.
 The reported outcome is improved accuracy and faster convergence compared
 to standard FedAvg. The explanation tool is making training decisions.
 
-### 2. Using LIME to Detect Poisoned Clients
+### 9.2 Using LIME to Detect Poisoned Clients
 
 Detecting poisoning attacks in federated learning is genuinely difficult
 because the server never sees the training data that produced a suspicious
@@ -793,7 +803,7 @@ influential in that context.
 The change in feature importance over time becomes the detection signal.
 XAI is no longer just explaining errors. It is catching attacks.
 
-### 3. Using GradCAM to Expose Backdoors
+### 9.3 Using GradCAM to Expose Backdoors
 
 A backdoor attack is a specific and particularly dangerous form of
 poisoning. The attacker does not try to degrade the model generally.
@@ -820,38 +830,35 @@ For a backdoored model, GradCAM highlights the yellow sticker in the
 corner, something completely irrelevant to the classification task.
 
 ![The backdoor trigger](figs/fig15_backdoor.png)
-*Figure 20. The model works correctly on every input except one — the one the attacker chose.*
+*Figure 20. GradCAM exposes the backdoor — the normal model looks at the sign, the backdoored model looks at the sticker.*
 
 By running GradCAM on the global model across a set of test images, an
 auditing system can catch this pattern. If the explanation consistently
 draws attention to irrelevant regions, a backdoor is present.
 The explanation method sees what the model was taught to hide.
 
-### 4. Using SHAP to Block Adversarial Data Poisoning
+### 9.4 Using SHAP to Block Adversarial Data Poisoning
 
-A GAN-based poisoning attack works by using a generative model to produce
-adversarial examples, inputs specifically engineered to fool the model.
-These adversarial examples are mixed into a client's training data. The
-model learns to misclassify them in whatever way the attacker wants, while
-continuing to work correctly on natural inputs.
+A GAN-based poisoning attack uses a generative model to craft adversarial
+examples — inputs specifically engineered to fool the model. These are
+mixed into a client's training data, teaching the model to misclassify
+them in whatever way the attacker wants while continuing to work correctly
+on natural inputs.
 
 The defense uses SHAP in an unexpected way. At each client, SHAP
-identifies which input features "which pixels, in the case of images"
+identifies which input features — which pixels, in the case of images —
 are most important to the current local model's predictions. Those
-high-importance features are then masked before training. Replaced with
-zeros or noise.
-
-The reasoning is this: GAN-based adversarial attacks work by making
-tiny, precisely crafted perturbations to the pixels the model pays most
-attention to. If those pixels are masked before the model ever sees the
+high-importance features are then masked before training, replaced with
+zeros or noise. If they are masked before the model ever sees the
 training data, the adversarial perturbation has nothing to grab onto.
-The attack loses its foothold.
 
 By hiding the features the model cares about most, you make the model
 harder to manipulate through those features. The explanation tool becomes
 a shield.
 
----
+![SHAP masking defense](figs/fig23_shap_masking.png)
+*Figure 21. SHAP identifies the pixels the model relies on most — masking them before training leaves the adversarial attack with nothing to grab onto.*
+
 
 The same methods designed to explain predictions are, in these
 applications, selecting better training participants, catching compromised
@@ -861,9 +868,8 @@ surprising findings in this area of research, and it makes a strong
 case that XAI in federated learning is not an afterthought. It is
 infrastructure.
 
----
 
-## Try It Yourself: The FL Playground
+## 10. Try It Yourself: The FL Playground
 
 One of the best ways to build intuition for the concepts in this chapter
 is to watch federated learning actually run. The FL Playground is an
@@ -902,7 +908,7 @@ Now check the **Differential Privacy** box while training. Watch what
 happens to accuracy. That drop is the defense cost we saw in the DLG
 paper, the same trade-off, made visible in real time.
 
-## Where the Field Stands
+## 11. Where the Field Stands
 
 Let us come back to where we started.
 
@@ -920,13 +926,12 @@ this chapter, and the surprising dual role of XAI as a security tool,
 represent genuine contributions. But honesty requires saying clearly that
 the problem is not solved.
 
-## An Honest Look at What Is Still Unsolved
+## 12. An Honest Look at What Is Still Unsolved
 
 The scoping review of 37 papers combining federated learning and XAI found
-that only one study had ever quantitatively measured how much FL actually
-changes the quality of model explanations compared to centralized training.
-One. The field has been assuming the answer is roughly fine without
-checking.
+that only one study — Fiosina et al. (2022) — had ever quantitatively measured how much FL actually changes
+the quality of model explanations compared to centralized training. The
+field has been assuming the answer is roughly fine without checking.
 
 That gap is not a criticism of the researchers who produced this work.
 It is a map of where the interesting problems still live.
@@ -1001,6 +1006,10 @@ Informatics, 18*(5), 3562-3571.
 Ma, X., & Gu, L. (2023). Research and Application of
 Generative-Adversarial-Network Attacks Defense Method Based on
 Federated Learning. *Electronics, 12*(4), 975.
+
+Fiosina, J. (2022). Interpretable privacy-preserving collaborative deep
+learning for taxi trip duration forecasting. *Smart Cities, Green
+Technologies, and Intelligent Transport Systems*. Springer.
 
 ---
 
